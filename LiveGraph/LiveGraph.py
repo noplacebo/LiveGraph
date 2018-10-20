@@ -4,34 +4,6 @@ import numpy as np
 import math
 
 
-class DataStreamError(Exception):
-    pass
-
-
-class DataStream(object):
-    def __init__(self, no_signals, m, random=True, serial=None):
-        self.no_signals = no_signals
-        self.m = m
-        self.random = random
-        self.amplitudes = None
-        self.y = None
-        self.serial = None
-
-    def __enter__(self):
-        if self.random:
-            self.amplitudes = .1 + .2 * np.random.rand(self.m, 1).astype(np.float32)
-        else:
-            self.amplitudes = np.zeros((self.m, 1)).astype(np.float32)
-        self.y = self.amplitudes * np.random.randn(self.m, self.no_signals).astype(np.float32)
-        return self
-
-    def __exit__(self, ex_type, ex_value, ex_traceback):
-        pass
-
-    def getdata(self):
-        return .1 + .2 * np.random.rand(self.m, 1).astype(np.float32)
-
-
 class LiveGraph(object):
     def __init__(self, nrows=1, ncols=1, samples=1000, colours=None):
         self.no_rows = nrows
@@ -50,8 +22,6 @@ class LiveGraph(object):
         self.index = np.c_[np.repeat(np.repeat(np.arange(self.no_cols), self.no_rows), self.n),
                            np.repeat(np.tile(np.arange(self.no_rows), self.no_cols), self.n),
                            np.tile(np.arange(self.n), self.m)].astype(np.float32)
-
-
 
 
 VERT_SHADER = """
@@ -113,11 +83,11 @@ void main() {
 
 
 class Canvas(app.Canvas):
-    def __init__(self, graph, y, data_stream):
+    def __init__(self, graph, data_stream, frequency):
         app.Canvas.__init__(self, title='Use your wheel to zoom!',
                             keys='interactive')
         self.program = gloo.Program(VERT_SHADER, FRAG_SHADER)
-        self.program['a_position'] = y.reshape(-1, 1)
+        self.program['a_position'] = data_stream.y.reshape(-1, 1)
         self.program['a_color'] = graph.colours
         self.program['a_index'] = graph.index
         self.program['u_scale'] = (1., 1.)
@@ -126,11 +96,12 @@ class Canvas(app.Canvas):
         self.data_stream = data_stream
         self.n = graph.n
         self.m = graph.m
-        self.y = y
+        self.y = data_stream.y
 
         gloo.set_viewport(0, 0, *self.physical_size)
 
-        self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+        # self._timer = app.Timer('auto', connect=self.on_timer, start=True)
+        self._timer = app.Timer(1.0/frequency, connect=self.on_timer, start=True)
 
         gloo.set_state(clear_color='black', blend=True,
                        blend_func=('src_alpha', 'one_minus_src_alpha'))
