@@ -90,7 +90,7 @@ class Canvas(app.Canvas):
         self.program['a_position'] = data_stream.y.reshape(-1, 1)
         self.program['a_color'] = graph.colours
         self.program['a_index'] = graph.index
-        self.program['u_scale'] = (1., 1.)
+        self.program['u_scale'] = (1000., 1000.)
         self.program['u_size'] = (graph.no_rows, graph.no_cols)
         self.program['u_n'] = graph.n
         self.data_stream = data_stream

@@ -7,18 +7,20 @@ class DataStreamError(Exception):
 
 
 class DataStream(object):
-    def __init__(self, no_signals, m, random=True, serial=None, data_chars=3):
+    def __init__(self, no_signals, m, source, random=True, data_chars=3, delim=' '):
         self.no_signals = no_signals
+        self.source = source
+        self.delim = delim
         self.m = m
         self.random = random
         self.amplitudes = None
         self.y = None
-        self.serial = serial
         self.data_chars = data_chars
+        self.slice_op = slice(data_chars)
+        self.amplitudes = np.zeros((self.m, 1)).astype(np.float32)
+        self.y = self.amplitudes * np.zeros((self.m, self.no_signals)).astype(np.float32)
 
     def __enter__(self):
-        self.amplitudes = np.zeros((self.m, 1)).astype(np.float32)
-        self.y = self.amplitudes * np.zeros(self.m, self.no_signals).astype(np.float32)
         return self
 
     def __exit__(self, ex_type, ex_value, ex_traceback):
@@ -28,7 +30,13 @@ class DataStream(object):
         if self.random:
             data = .1 + .2 * np.random.rand(self.m, 1).astype(np.float32)
         else:
-            data = self.getserial()
+            rawdata = self.source.readline()
+            splitdata = rawdata.split(self.delim)
+            data = np.zeros((len(splitdata),1))
+            for i in range(len(splitdata)):
+                data[i] = float(splitdata[i][self.slice_op])
+                data = data.astype(np.float32)
+                print(data)
         return data
 
     def getserial(self):
