@@ -7,7 +7,7 @@ numpy==1.15.2
 PyQt5==5.11.3
 PyQt5-sip==4.19.13
 pyserial==3.4
-PyYAML==3.13
+PyYAML==5.4
 requests==2.20.0
 serial==0.0.69
 urllib3==1.24
